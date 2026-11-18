@@ -1,0 +1,38 @@
+groups:
+  - name: hyperheal-resource-alerts
+    rules:
+      - alert: HighCPU_Overload
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[1m])) * 100) > 90
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CPU di {{ $labels.instance }} di atas 90%"
+          description: "Pemakaian CPU {{ $value | printf \"%.1f\" }}% selama lebih dari 1 menit."
+
+      - alert: HighRAM_MemoryLeak
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "RAM di {{ $labels.instance }} di atas 90%"
+          description: "Pemakaian RAM {{ $value | printf \"%.1f\" }}% selama lebih dari 1 menit."
+
+      - alert: HighSwapUsage
+        expr: (1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) * 100 > 50 and node_memory_SwapTotal_bytes > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Swap di {{ $labels.instance }} di atas 50%"
+          description: "Pemakaian swap {{ $value | printf \"%.1f\" }}%."
+
+      - alert: TargetDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Target {{ $labels.instance }} ({{ $labels.job }}) tidak bisa di-scrape"
+          description: "Node exporter tidak merespons lebih dari 1 menit."
